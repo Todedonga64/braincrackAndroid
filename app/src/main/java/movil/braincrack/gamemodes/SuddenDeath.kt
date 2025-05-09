@@ -105,7 +105,8 @@ fun SuddenDeathView(navegar: NavController, name: String) {
                 // Mostrar el tiempo restante en la parte superior
                 Text(
                     text = "Tiempo restante: $tiempoRestante s",
-                    modifier = Modifier.align(Alignment.Start)  // Alineado a la izquierda
+                    modifier = Modifier.align(Alignment.Start)
+                        .padding(start = 10.dp)// Alineado a la izquierda
                 )
 
                 Spacer(modifier = Modifier.height(130.dp))
@@ -115,7 +116,8 @@ fun SuddenDeathView(navegar: NavController, name: String) {
                     text = preguntaActual?.pregunta ?: "Cargando pregunta...",
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(start = 25.dp, end = 25.dp)
                 )
 
                 Spacer(modifier = Modifier.height(50.dp))
@@ -173,7 +175,7 @@ fun SuddenDeathView(navegar: NavController, name: String) {
         ) {
             // Fondo de pantalla
             Image(
-                painter = painterResource(id = R.drawable.braincrack),
+                painter = painterResource(id = R.drawable.perdido),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize()
             )
@@ -208,7 +210,7 @@ fun SuddenDeathView(navegar: NavController, name: String) {
                     if (preguntasRestantes.isNotEmpty()) {
                         preguntaActual = preguntasRestantes.random()
                     }
-                    tiempoRestante = 30  // Reinicia el tiempo a 30 segundos
+                    tiempoRestante = 10  // Reinicia el tiempo a 30 segundos
                 }) {
                     Text("Reiniciar Juego")
                 }

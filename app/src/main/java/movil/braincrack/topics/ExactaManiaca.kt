@@ -33,55 +33,38 @@ import movil.braincrack.api.ui.viewmodel.SuddenDeathViewModel
 
 @Composable
 fun ExactaManiacaView(navegar: NavController, name: String) {
+
     val suddenDeathViewModel: SuddenDeathViewModel = viewModel()
 
     // Si los temas están vacíos, los obtenemos
     if (suddenDeathViewModel.temas.isEmpty()) {
-        suddenDeathViewModel.obtenerDatos()  // Cargar los temas desde el ViewModel
+        suddenDeathViewModel.obtenerDatos()  // Cargar los temas desde la API
     }
 
-    // Obtener las preguntas del tema "Exacta_Maniaca"
+    // Obtener solo las preguntas del tema "Exacta_Maniaca"
     val temaExactaManiaca = suddenDeathViewModel.temas.find { it.nombre == "Exacta_Maniaca" }
-    var preguntasRestantes = temaExactaManiaca?.preguntas?.shuffled()?.toMutableList() ?: mutableListOf()
+    val preguntasRestantes = temaExactaManiaca?.preguntas?.toMutableList() ?: mutableListOf()
 
-    // Variables de estado para las respuestas correctas e incorrectas
-    var respuestasCorrectas by remember { mutableStateOf(0) }
+    // Variables de estado para el puntaje y la pregunta actual
+    var puntaje by remember { mutableStateOf(0) }
+    var preguntasRespondidas by remember { mutableStateOf(0) }
     var respuestasIncorrectas by remember { mutableStateOf(0) }
-    var preguntaActual by remember { mutableStateOf<Pregunta?>(null) }
+    var preguntaActual by remember { mutableStateOf<Pregunta?>(null) }  // Inicializamos con null
 
     // Usamos LaunchedEffect para inicializar preguntaActual solo cuando las preguntas estén disponibles
     LaunchedEffect(preguntasRestantes) {
         if (preguntasRestantes.isNotEmpty()) {
-            preguntaActual = preguntasRestantes.first()  // Asignar la primera pregunta aleatoria
+            preguntaActual = preguntasRestantes.random()  // Asignar la primera pregunta aleatoria
         }
     }
 
-    // Función para responder a la pregunta
-    fun responder(opcionSeleccionada: Int) {
-        if (opcionSeleccionada == preguntaActual?.respuesta) {
-            respuestasCorrectas += 1
-        } else {
-            respuestasIncorrectas += 1
-        }
-
-        // Eliminar la pregunta actual de la lista de preguntas restantes
-        preguntasRestantes.remove(preguntaActual)
-
-        // Si quedan preguntas, asignar una nueva pregunta aleatoria
-        if (preguntasRestantes.isNotEmpty()) {
-            preguntaActual = preguntasRestantes.random()
-        } else {
-            // Si no quedan preguntas, mostrar los resultados
-            preguntaActual = null // Esto hará que el flujo pase a mostrar los resultados
-        }
-    }
-
-    // Mostrar las preguntas y opciones
-    if (preguntaActual != null) {
+    // Mostrar las preguntas
+    if (preguntasRestantes.isNotEmpty()) {
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
         ) {
-            // Fondo de pantalla
+            // Fondo de pantalla (puedes cambiarlo según el tema o usar un fondo por defecto)
             Image(
                 painter = painterResource(id = R.drawable.exacta_maniaca),
                 contentDescription = null,
@@ -91,15 +74,17 @@ fun ExactaManiacaView(navegar: NavController, name: String) {
             // Contenido sobre el fondo
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top,
+                verticalArrangement = Arrangement.Center,
                 modifier = Modifier.padding(16.dp)
             ) {
+                Spacer(modifier = Modifier.height(130.dp))
+
                 // Mostrar la pregunta
-                Text(
-                    text = preguntaActual?.pregunta ?: "Cargando pregunta...",
+                Text(text = preguntaActual?.pregunta ?: "Cargando pregunta...",
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(start = 25.dp, end = 25.dp)
                 )
 
                 Spacer(modifier = Modifier.height(50.dp))
@@ -108,7 +93,22 @@ fun ExactaManiacaView(navegar: NavController, name: String) {
                 preguntaActual?.opciones2?.forEachIndexed { index, opcion ->
                     Button(
                         onClick = {
-                            responder(index + 1)  // Enviar la opción seleccionada
+                            if (index + 1 == preguntaActual?.respuesta) {
+                                puntaje += 1 // Incrementa el puntaje si es la respuesta correcta
+                            } else {
+                                respuestasIncorrectas += 1  // Cuenta como incorrecta
+                            }
+
+                            // Eliminar la pregunta actual de las preguntas restantes para no repetirla
+                            preguntasRestantes.remove(preguntaActual)
+
+                            // Incrementar el contador de preguntas respondidas
+                            preguntasRespondidas += 1
+
+                            // Si quedan preguntas, toma una nueva pregunta aleatoria
+                            if (preguntasRestantes.isNotEmpty()) {
+                                preguntaActual = preguntasRestantes.random()
+                            }
                         },
                         modifier = Modifier.fillMaxWidth().padding(8.dp)
                     ) {
@@ -121,48 +121,68 @@ fun ExactaManiacaView(navegar: NavController, name: String) {
                     Column(modifier = Modifier
                         .align(Alignment.BottomStart)
                         .padding(start = 20.dp)) {
-                        Text(
-                            "Respuestas correctas: $respuestasCorrectas",
+                        Text("Respuestas Correctas: $puntaje",
                             fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
-                        Text(
-                            "Respuestas incorrectas: $respuestasIncorrectas",
+                            fontSize = 16.sp)
+                        Text("Respuestas Incorrectas: $respuestasIncorrectas",
                             fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
+                            fontSize = 16.sp)
                     }
                 }
             }
         }
     } else {
-        // Si ya no quedan preguntas, mostrar los resultados
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
+        // Fin del juego cuando ya no hay más preguntas
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
         ) {
-            Text("Juego Terminado")
-            Text("Respuestas correctas: $respuestasCorrectas")
-            Text("Respuestas incorrectas: $respuestasIncorrectas")
+            // Fondo de pantalla (puedes cambiarlo según el tema o usar un fondo por defecto)
+            Image(
+                painter = painterResource(id = R.drawable.acabo),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize()
+            )
 
-            // Botón para reiniciar el juego
-            Button(onClick = {
-                // Reiniciar el juego
-                respuestasCorrectas = 0
-                respuestasIncorrectas = 0
-                preguntasRestantes = temaExactaManiaca?.preguntas?.shuffled()?.toMutableList() ?: mutableListOf()
-                if (preguntasRestantes.isNotEmpty()) {
-                    preguntaActual = preguntasRestantes.first()
+            // Contenido sobre el fondo
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text("Se acabó el juego $name",
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp)
+                Text("Respuestas Correctas: $puntaje",
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp)
+                Text("Respuestas Incorrectas: $respuestasIncorrectas",
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp)
+
+                Button(onClick = {
+                    // Reiniciar el juego si se desea
+                    puntaje = 0
+                    respuestasIncorrectas = 0
+                    preguntasRespondidas = 0
+                    preguntasRestantes.clear()
+                    temaExactaManiaca?.preguntas?.let { preguntasRestantes.addAll(it) }
+                    if (preguntasRestantes.isNotEmpty()) {
+                        preguntaActual = preguntasRestantes.random()
+                    }
+                }) {
+                    Text("Reiniciar Juego")
                 }
-            }) {
-                Text("Reiniciar Juego")
-            }
-
-            Button(onClick = { navegar.navigate("gamemodes/${Uri.encode(name)}") }) {
-                Text(text = "Regresar a modos de juego")
+                Button(onClick = { navegar.navigate("gamemodes/${Uri.encode(name)}") }) {
+                    Text(text = "Regresar a modos de juego")
+                }
             }
         }
     }

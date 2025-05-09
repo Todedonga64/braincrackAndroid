@@ -96,7 +96,9 @@ fun LibreView(navegar: NavController, name: String) {
                 Text(text = preguntaActual?.pregunta ?: "Cargando pregunta...",
                     fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp)
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(start = 25.dp, end = 25.dp)
+                )
 
                 Spacer(modifier = Modifier.height(50.dp))
 
@@ -149,7 +151,7 @@ fun LibreView(navegar: NavController, name: String) {
         ) {
             // Fondo de pantalla
             Image(
-                painter = painterResource(id = R.drawable.braincrack),
+                painter = painterResource(id = R.drawable.perdido),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize()
             )

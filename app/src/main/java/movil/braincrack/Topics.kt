@@ -65,7 +65,7 @@ fun TopicsView(navegar: NavController, name: String) {
             }
             Button(onClick = {navegar.navigate("chismesito/${Uri.encode(name)}")},
                 modifier = Modifier.align(Alignment.CenterEnd)
-                    .padding(end = 65.dp, top = 40.dp)) {
+                    .padding(end = 65.dp, top = 50.dp)) {
                 Text(text = "Go!")
             }
             Button(onClick = {navegar.navigate("geobrain/${Uri.encode(name)}")},
